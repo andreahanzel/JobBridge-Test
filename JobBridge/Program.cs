@@ -30,7 +30,11 @@ builder.Services.AddSingleton<SessionAuthService>();
 builder.Services.AddSingleton<AuthenticationStateProvider>(provider => provider.GetService<SessionAuthService>()!);
 
 builder.Services.AddHttpClient();
-builder.Services.AddSqlite<JobBridgeContext>("Data Source=jobbridge.db");
+// Use production path if in production
+var dbPath = builder.Environment.IsProduction() 
+    ? "/app/data/jobbridge.db" 
+    : "jobbridge.db";
+builder.Services.AddSqlite<JobBridgeContext>($"Data Source={dbPath}");
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -131,33 +135,43 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        // Ensure database is created and migrated
-        if (app.Environment.IsProduction())
+        // Check if database exists and can connect
+        var canConnect = await db.Database.CanConnectAsync();
+        
+        if (!canConnect)
         {
-            // In production, ensure the database file exists
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-            var dbPath = connectionString?.Replace("Data Source=", "");
-            if (!string.IsNullOrEmpty(dbPath) && !File.Exists(dbPath))
+            logger.LogInformation("Database doesn't exist. Creating...");
+            await db.Database.EnsureCreatedAsync();
+        }
+        else
+        {
+            // Try to migrate, but don't fail if tables exist
+            try
             {
-                await db.Database.EnsureCreatedAsync();
+                await db.Database.MigrateAsync();
+                logger.LogInformation("Database migration completed successfully.");
+            }
+            catch (Exception migEx)
+            {
+                logger.LogWarning(migEx, "Migration skipped - database already exists");
             }
         }
         
-        await db.Database.MigrateAsync();
-        
+        // Seed data
         try
         {
             await SeedData.InitializeAsync(serviceProvider);
+            logger.LogInformation("Database seeding completed successfully.");
         }
-        catch (Exception)
+        catch (Exception seedEx)
         {
-            // Silently continue - seeding issues don't affect app functionality
-            logger.LogInformation("Seeding completed with some warnings.");
+            logger.LogWarning(seedEx, "Seeding completed with some warnings.");
         }
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "An error occurred during database migration.");
+        logger.LogError(ex, "Critical database setup error");
+        // Don't rethrow - let the app start anyway
     }
 }
 
