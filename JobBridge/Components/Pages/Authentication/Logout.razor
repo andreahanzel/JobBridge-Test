@@ -3,9 +3,9 @@
 @using Microsoft.AspNetCore.Components.Web
 @using JobBridge.Services
 @using Microsoft.JSInterop
-@inject SessionAuthService SessionAuth
 @inject NavigationManager Navigation
-@inject IJSRuntime JSRuntime
+@inject AuthService AuthService
+@inject SignInManager<JobBridge.Data.User> SignInManager
 
 <link href="css/authentication.css" rel="stylesheet" /> <!-- This is the authentication CSS -->
 
@@ -49,8 +49,7 @@
     // This is the logout handler
     private async Task HandleLogout()
     {
-        await SessionAuth.SignOutAsync(JSRuntime);
-        await Task.Delay(200);
-        Navigation.NavigateTo("/authentication");
+        await SignInManager.SignOutAsync();
+        Navigation.NavigateTo("/", true);
     }
 }

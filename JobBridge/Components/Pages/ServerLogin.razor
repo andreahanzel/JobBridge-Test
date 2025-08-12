@@ -5,8 +5,7 @@
 @using Microsoft.JSInterop
 @inject UserManager<JobBridge.Data.User> UserManager
 @inject NavigationManager Navigation
-@inject SessionAuthService SessionAuth
-@inject IJSRuntime JSRuntime
+@inject SignInManager<JobBridge.Data.User> SignInManager
 
 <h3>Completing Login...</h3>
 
@@ -34,8 +33,8 @@
                 if (user != null)
                 {
                     Console.WriteLine($"Signing in user: {user.Email} with role: {user.Role}, Remember: {Remember}");
-                    await SessionAuth.SignInAsync(JSRuntime, user.Id, user.Email, user.UserName ?? user.Email, user.Role, user.FirstName, Remember);
-                    Console.WriteLine("SessionAuth.SignIn completed");
+                    await SignInManager.SignInAsync(user, Remember);
+                    Console.WriteLine("SignIn completed");
                     Navigation.NavigateTo("/");
                     return; // Successful login
                 }
