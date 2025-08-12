@@ -1,6 +1,4 @@
 ﻿@inherits LayoutComponentBase
-@inject SessionAuthService SessionAuth
-@inject IJSRuntime JSRuntime
 @using System.Security.Claims
 
 <div class="page-layout-horizontal">
@@ -18,7 +16,7 @@
                             Welcome back, <strong>@context.User.FindFirst(ClaimTypes.GivenName)?.Value</strong>! 
                         </span>
                         <span class="text-muted d-block d-md-inline-block">
-                            You are logged in as @context.User.FindFirst("http://schemas.microsoft.com/ws/2008/06/identity/claims/role")?.Value
+                            You are logged in as @context.User.FindFirst(ClaimTypes.Role)?.Value
                         </span>
                     </div>
                 </div>
@@ -34,17 +32,6 @@
 
     <Footer />
 </div>
-
-@code {
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await SessionAuth.InitializeAsync(JSRuntime);
-        }
-    }
-}
-
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.

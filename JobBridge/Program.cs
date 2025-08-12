@@ -26,8 +26,8 @@ builder.Services.AddSingleton(builder.Configuration);
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
-builder.Services.AddSingleton<SessionAuthService>();
-builder.Services.AddSingleton<AuthenticationStateProvider>(provider => provider.GetService<SessionAuthService>()!);
+// builder.Services.AddSingleton<SessionAuthService>();
+// builder.Services.AddSingleton<AuthenticationStateProvider>(provider => provider.GetService<SessionAuthService>()!);
 
 builder.Services.AddHttpClient();
 // Use production path if in production
